@@ -1,24 +1,31 @@
 pipeline {
     agent {
         docker {
-            image 'node:16.13.1-alpine'
+            image 'node:10-alpine'
+            args '-p 3000:3000'
         }
     }
     environment {
         CI = 'true'
     }
     stages {
-      stage('Install node modules') {
+        stage('Build') {
             steps {
                 sh 'npm install'
             }
-      }
-      stage('Build') {
+        }
+        stage('Test') {
             steps {
-                sh 'npm run build --prod'
+                sh './jenkins/scripts/test.sh'
             }
-      } 
-        
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+                input message: 'Finished using the web site? (Click "Proceed" to continue)?'
+                sh './jenkins/scripts/kill.sh'
+            }
+        }
     }
 }
 
